@@ -6,22 +6,30 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/quietguido/mapnu/internal/database/psql"
+	"github.com/quietguido/mapnu/internal/repo"
+	"github.com/quietguido/mapnu/internal/services"
 	"github.com/quietguido/mapnu/internal/transport/rest"
 	"github.com/quietguido/mapnu/pkg/httpserver"
 )
 
 func Execute() {
+	err := godotenv.Load("config.env")
+	if err != nil {
+		panic(err.Error() + " failed to load config.env")
+	}
+
 	lg, err := zap.NewProduction()
 	if err != nil {
 		panic("lg creation error")
 	}
 
 	dbcon, err := psql.New(psql.Config{
-		Addr:     os.Getenv("POSTGRES_USER"), //change for local and docker
+		Addr:     os.Getenv("POSTGRES_HOST"), //change for local and docker
 		Port:     os.Getenv("POSTGRES_PORT"),
 		User:     os.Getenv("POSTGRES_USER"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
@@ -31,7 +39,9 @@ func Execute() {
 		panic(err)
 	}
 
-	restHandler := rest.GetHandler(lg)
+	repos := repo.InitRepositories(lg, dbcon)
+	services := services.InitServices(lg, repos)
+	restHandler := rest.GetHandler(lg, services)
 	server := httpserver.New(":8080", restHandler)
 
 	oschan := make(chan os.Signal, 1)

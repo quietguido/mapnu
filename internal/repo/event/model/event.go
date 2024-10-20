@@ -37,9 +37,9 @@ type CreateEvent struct {
 	CreatedBy    uuid.UUID `json:"created_by" db:"created_by"`
 	Location_lat float64   `json:"location_lat" db:"location_lat"` // For PostGIS geometry data
 	Location_lon float64   `json:"location_lon" db:"location_lon"` // For PostGIS geometry data
-	Time         float64   `json:"time" db:"time"`                 // For PostGIS geometry data
+	Time         time.Time `json:"time" db:"time"`                 // For PostGIS geometry data
 	Organizer    string    `json:"organizer" db:"organizer"`
 	Upvote       int       `json:"upvote" db:"upvote"`
 	Downvote     int       `json:"downvote" db:"downvote"`
-	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	// CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }

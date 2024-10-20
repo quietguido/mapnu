@@ -11,6 +11,7 @@ import (
 
 type EventRepository interface {
 	CreateEvent(ctx context.Context, createEvent model.CreateEvent) error
+	GetEventById(ctx context.Context, eventId string) (*model.Event, error)
 }
 
 type Repositories struct {

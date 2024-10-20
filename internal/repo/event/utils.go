@@ -2,14 +2,10 @@ package event
 
 import (
 	"fmt"
+	"time"
 )
 
-func createST_GeomFromText(lon, lat, time float64) string {
-	pointM := fmt.Sprintf(
-		"ST_GeomFromText('POINTM(%f %f %f)', 4326)",
-		lon,
-		lat,
-		time,
-	)
-	return pointM
+// Helper function to generate a PostGIS POINTM WKT string
+func createPointM(lon, lat float64, time time.Time) string {
+	return fmt.Sprintf("POINTM(%f %f %d)", lon, lat, time.Unix())
 }

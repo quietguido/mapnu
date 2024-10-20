@@ -2,8 +2,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS postgis;
 
--- Create user table
-CREATE TABLE IF NOT EXISTS "user" (
+-- Create client table (formerly "user")
+CREATE TABLE IF NOT EXISTS client (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -11,15 +11,15 @@ CREATE TABLE IF NOT EXISTS "user" (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index on user email
-CREATE INDEX IF NOT EXISTS user_email_index ON "user"(email);
+-- Create index on client email
+CREATE INDEX IF NOT EXISTS client_email_index ON client(email);
 
 -- Create event table
 CREATE TABLE IF NOT EXISTS event (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    created_by UUID REFERENCES "user"(id),
+    created_by UUID REFERENCES client(id),  -- Updated reference
     location_date GEOMETRY(POINTM, 4326) NOT NULL,
     organizer VARCHAR(255) NOT NULL,
     upvote INTEGER NOT NULL DEFAULT 0,

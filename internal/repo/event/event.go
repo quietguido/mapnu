@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	event = "event"
+	eventTable = "event"
 )
 
 type repository struct {
@@ -30,57 +31,87 @@ func NewRepository(lg *zap.Logger, db *sqlx.DB) *repository {
 }
 
 func (rp *repository) CreateEvent(ctx context.Context, createEvent model.CreateEvent) error {
-	insertquery := rp.builder.
-		Insert(event).Columns(
+	// Use Squirrel to build the query
+	insertQuery := rp.builder.
+		Insert(eventTable).Columns(
 		"name",
 		"description",
 		"created_by",
-		"location_date",
+		"location_date", // PostGIS point with measurement (POINTM)
 		"organizer",
 		"upvote",
 		"downvote",
-		"created_at",
+		// "created_at",
 	).Values(
 		createEvent.Name,
 		createEvent.Description,
 		createEvent.CreatedBy,
-		createST_GeomFromText(createEvent.Location_lon, createEvent.Location_lat, createEvent.Time),
+		createPointM(
+			createEvent.Location_lon,
+			createEvent.Location_lat,
+			createEvent.Time,
+		), // Custom function to generate POINTM
 		createEvent.Organizer,
 		createEvent.Upvote,
 		createEvent.Downvote,
-		createEvent.CreatedAt,
+		// createEvent.CreatedAt,
 	)
 
-	sql, args, err := insertquery.ToSql()
+	sql, args, err := insertQuery.ToSql()
 	if err != nil {
-		return errors.Wrap(err, "Failed to create sql query")
+		return errors.Wrap(err, "Failed to build SQL query")
 	}
 
-	_, err = rp.db.ExecContext(ctx, sql, args)
-
+	// Execute the query
+	result, err := rp.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "Failed to run sql query")
+		return errors.Wrap(err, "Failed to execute SQL query")
+	}
+
+	// Optionally check the number of rows affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return errors.Wrap(err, "Failed to get affected rows")
+	}
+	if rowsAffected == 0 {
+		return errors.New("No rows were inserted")
 	}
 
 	return nil
 }
 
-// func (rp *repository) CreateEvent() error {
-// 	selectquery := rp.builder.
-// 		Select(
-// 			"id",
-// 			"name",
-// 			"description",
-// 			"created_by",
-// 			"location_lat",
-// 			"location_lon",
-// 			"time",
-// 			"organizer",
-// 			"upvote",
-// 			"downvote",
-// 			"created_at",
-// 		).
-// 		From(event)
+func (rp *repository) GetEventById(ctx context.Context, eventId string) (*model.Event, error) {
+	_, err := uuid.Parse(eventId)
+	if err != nil {
+		return nil, errors.Wrap(err, "not proper uuid")
+	}
+	// var formatedUUID pgtype.UUID
+	// formatedUUID.Set(eventUUID)
 
-// 	return nil
-// }
+	selectquery := `
+		select
+			id,
+			name,
+			description,
+			created_by,
+			ST_X(location_date) AS location_lat,
+			ST_Y(location_date) AS location_lon,
+			ST_M(location_date) AS time,
+			organizer,
+			upvote,
+			downvote,
+			created_at
+		from event
+		where id = $1;
+	`
+	// Execute the query
+	row := rp.db.QueryRowxContext(ctx, selectquery, eventId)
+	var eventModel model.Event
+	err = row.StructScan(&eventModel)
+	if err != nil {
+		rp.lg.Error(selectquery)
+		rp.lg.Error(eventId)
+		return nil, errors.Wrap(err, "Failed to execute SQL query")
+	}
+	return &eventModel, nil
+}

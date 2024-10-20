@@ -11,11 +11,11 @@ DROP INDEX IF EXISTS event_name_index;
 -- Drop the event table
 DROP TABLE IF EXISTS event;
 
--- Drop the index on user email
-DROP INDEX IF EXISTS user_email_index;
+-- Drop the index on client email
+DROP INDEX IF EXISTS client_email_index;
 
--- Drop the user table
-DROP TABLE IF EXISTS "user";
+-- Drop the client table (formerly "user")
+DROP TABLE IF EXISTS client;
 
 -- Disable extensions
 DROP EXTENSION IF EXISTS postgis;
