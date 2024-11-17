@@ -12,7 +12,8 @@ func (e Err) Error() string {
 }
 
 const (
-	badJson = Err("bad json")
+	badJson             = Err("bad json")
+	failedToDecodeQuery = Err("bad query params")
 )
 
 func JsonBodyDecoding(r *http.Request, dest any) error {
@@ -38,4 +39,12 @@ func RespondWithJson(w http.ResponseWriter, code int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(data)
+}
+
+func DecodeQuery(r *http.Request, dest any) error {
+	urlValues := r.URL.Query()
+	if err := decodeQueryParams(urlValues, dest, "form"); err != nil {
+		return failedToDecodeQuery
+	}
+	return nil
 }

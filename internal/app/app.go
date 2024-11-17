@@ -14,19 +14,16 @@ import (
 	"github.com/quietguido/mapnu/internal/repo"
 	"github.com/quietguido/mapnu/internal/services"
 	"github.com/quietguido/mapnu/internal/transport/rest"
+	"github.com/quietguido/mapnu/pkg/assert"
 	"github.com/quietguido/mapnu/pkg/httpserver"
 )
 
 func Execute() {
 	err := godotenv.Load("config.env")
-	if err != nil {
-		panic(err.Error() + " failed to load config.env")
-	}
+	assert.ErrorNil(err, "failed to load config.env")
 
 	lg, err := zap.NewProduction()
-	if err != nil {
-		panic("lg creation error")
-	}
+	assert.ErrorNil(err, "lg creation error")
 
 	dbcon, err := psql.New(psql.Config{
 		Addr:     os.Getenv("POSTGRES_HOST"), //change for local and docker
@@ -35,9 +32,7 @@ func Execute() {
 		Password: os.Getenv("POSTGRES_PASSWORD"),
 		DB:       os.Getenv("POSTGRES_DB"),
 	})
-	if err != nil {
-		panic(err)
-	}
+	assert.ErrorNil(err, "failed db connection")
 
 	repos := repo.InitRepositories(lg, dbcon)
 	services := services.InitServices(lg, repos)

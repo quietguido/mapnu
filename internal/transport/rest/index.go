@@ -33,6 +33,7 @@ func GetHandler(
 
 	router.HandleFunc("POST /event", restH.CreateEventHandler)
 	router.HandleFunc("GET /event/{id}", restH.GetEventByIdHandler)
+	router.HandleFunc("GET /map", restH.GetMapForQuadrantHandler)
 
 	return middlewareStack(router)
 }

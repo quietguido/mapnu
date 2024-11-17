@@ -12,6 +12,7 @@ import (
 type EventService interface {
 	Create(ctx context.Context, createEvent eventModel.CreateEvent) error
 	GetEventById(ctx context.Context, eventId string) (*eventModel.Event, error)
+	GetMapForQuadrant(ctx context.Context, mapQuery eventModel.GetMapQueryParams) ([]eventModel.Event, error)
 }
 
 type Service struct {

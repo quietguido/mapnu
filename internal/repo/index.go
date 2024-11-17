@@ -5,13 +5,14 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/quietguido/mapnu/internal/repo/event"
-	"github.com/quietguido/mapnu/internal/repo/event/model"
+	eventModel "github.com/quietguido/mapnu/internal/repo/event/model"
 	"go.uber.org/zap"
 )
 
 type EventRepository interface {
-	CreateEvent(ctx context.Context, createEvent model.CreateEvent) error
-	GetEventById(ctx context.Context, eventId string) (*model.Event, error)
+	CreateEvent(ctx context.Context, createEvent eventModel.CreateEvent) error
+	GetEventById(ctx context.Context, eventId string) (*eventModel.Event, error)
+	GetMapForQuadrant(ctx context.Context, mapQuery eventModel.GetMapQueryParams) ([]eventModel.Event, error)
 }
 
 type Repositories struct {

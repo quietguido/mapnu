@@ -3,6 +3,8 @@ package event
 import (
 	"context"
 
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/quietguido/mapnu/internal/repo"
 	"go.uber.org/zap"
 
@@ -26,5 +28,14 @@ func (s *service) Create(ctx context.Context, createEvent eventModel.CreateEvent
 }
 
 func (s *service) GetEventById(ctx context.Context, eventId string) (*eventModel.Event, error) {
+	_, err := uuid.Parse(eventId)
+	if err != nil {
+		return nil, errors.Wrap(err, "not proper uuid")
+	}
+
 	return s.repo.GetEventById(ctx, eventId)
+}
+
+func (s *service) GetMapForQuadrant(ctx context.Context, mapQuery eventModel.GetMapQueryParams) ([]eventModel.Event, error) {
+	return s.repo.GetMapForQuadrant(ctx, mapQuery)
 }
