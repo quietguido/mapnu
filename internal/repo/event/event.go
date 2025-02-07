@@ -132,17 +132,15 @@ func (rp *repository) GetMapForQuadrant(ctx context.Context, mapQuery model.GetM
 		AND ST_M(location_date) BETWEEN $5 AND $6; -- Dynamic time filter
 	`
 
-	// Prepare arguments for query placeholders
 	args := []interface{}{
-		mapQuery.FirstQuadLon,    // $1
-		mapQuery.FirstQuadLat,    // $2
-		mapQuery.SecondQuadLon,   // $3
-		mapQuery.SecondQuadLat,   // $4
-		mapQuery.FromTime.Unix(), // $5
-		mapQuery.ToTime.Unix(),   // $6
+		mapQuery.FirstQuadLon,         // $1
+		mapQuery.FirstQuadLat,         // $2
+		mapQuery.SecondQuadLon,        // $3
+		mapQuery.SecondQuadLat,        // $4
+		mapQuery.GetFromTime().Unix(), // $5
+		mapQuery.GetToTime().Unix(),   // $6
 	}
 
-	// Execute the query
 	rows, err := rp.db.QueryxContext(ctx, selectquery, args...)
 	if err != nil {
 		rp.lg.Error("Failed to execute GetMapForQuadrant query", zap.Error(err))
@@ -150,7 +148,6 @@ func (rp *repository) GetMapForQuadrant(ctx context.Context, mapQuery model.GetM
 	}
 	defer rows.Close()
 
-	// Parse the results
 	var events []model.Event
 	for rows.Next() {
 		var event model.Event
@@ -162,7 +159,6 @@ func (rp *repository) GetMapForQuadrant(ctx context.Context, mapQuery model.GetM
 		events = append(events, event)
 	}
 
-	// Check for any errors during iteration
 	if err := rows.Err(); err != nil {
 		rp.lg.Error("Row iteration error", zap.Error(err))
 		return nil, errors.Wrap(err, "Row iteration error")

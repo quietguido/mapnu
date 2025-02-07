@@ -2,6 +2,7 @@ package rest
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	eventModel "github.com/quietguido/mapnu/internal/repo/event/model"
@@ -53,18 +54,31 @@ func (st *restH) GetMapForQuadrantHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Validate query parameters
 	if mapQuery.FirstQuadLon == 0 || mapQuery.FirstQuadLat == 0 || mapQuery.SecondQuadLon == 0 || mapQuery.SecondQuadLat == 0 {
 		RespondWithError(w, http.StatusBadRequest, "Missing or invalid quadrant parameters")
 		return
 	}
-	if mapQuery.FromTime.IsZero() || mapQuery.ToTime.IsZero() {
-		panic(mapQuery.FromTime)
-		RespondWithError(w, http.StatusBadRequest, "Missing or invalid time parameters")
+
+	fromTime, err := time.Parse(time.RFC3339, mapQuery.FromTime)
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, "Invalid 'fromtime' format. Expected RFC3339 (e.g., 2024-11-17T14:17:01Z).")
 		return
 	}
 
-	// Call the service method to get events
+	toTime, err := time.Parse(time.RFC3339, mapQuery.ToTime)
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, "Invalid 'totime' format. Expected RFC3339 (e.g., 2024-11-17T14:17:01Z).")
+		return
+	}
+
+	if toTime.Before(fromTime) {
+		RespondWithError(w, http.StatusBadRequest, "'totime' must be after 'fromtime'.")
+		return
+	}
+
+	mapQuery.FromTime = fromTime.Format(time.RFC3339)
+	mapQuery.ToTime = toTime.Format(time.RFC3339)
+
 	events, err := st.services.Event.GetMapForQuadrant(r.Context(), mapQuery)
 	if err != nil {
 		st.lg.Error(err.Error())
@@ -72,6 +86,5 @@ func (st *restH) GetMapForQuadrantHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Respond with the events in JSON format
 	RespondWithJson(w, http.StatusOK, events)
 }

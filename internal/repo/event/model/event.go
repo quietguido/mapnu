@@ -16,7 +16,6 @@ type User struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
-// Event represents the event table in the database.
 type Event struct {
 	ID           uuid.UUID `json:"id" db:"id"`
 	Name         string    `json:"name" db:"name"`
