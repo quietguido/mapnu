@@ -2,6 +2,8 @@ package event
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -30,115 +32,108 @@ func NewRepository(lg *zap.Logger, db *sqlx.DB) *repository {
 	}
 }
 
-func (rp *repository) CreateEvent(ctx context.Context, createEvent model.CreateEvent) error {
+/*
+CREATE TABLE event_2025_03_15
+PARTITION OF event
+FOR VALUES FROM ('2025-03-15 00:00:00') TO ('2025-03-16 00:00:00');
+*/
+
+func (rp *repository) CreateEvent(ctx context.Context, createEvent model.CreateEvent) (int, error) {
+	partition_event_table := getPartition(createEvent.StartDate)
+
 	insertQuery := rp.builder.
-		Insert(eventTable).Columns(
+		Insert(partition_event_table).Columns(
 		"name",
 		"description",
 		"created_by",
-		"location_date",
+		"location",
+		"start_date",
 		"organizer",
-		"upvote",
-		"downvote",
 	).Values(
 		createEvent.Name,
 		createEvent.Description,
 		createEvent.CreatedBy,
-		createPointM(
-			createEvent.Location_lon,
-			createEvent.Location_lat,
-			createEvent.Time,
-		),
+		sq.Expr("ST_SetSRID(ST_Point(?, ?), 4326)", createEvent.Location_lon, createEvent.Location_lat),
+		createEvent.StartDate,
 		createEvent.Organizer,
-		createEvent.Upvote,
-		createEvent.Downvote,
-	)
+	).Suffix("RETURNING event_id")
 
 	sql, args, err := insertQuery.ToSql()
 	assert.IsNil(err, "Failed to build SQL query")
 
-	result, err := rp.db.ExecContext(ctx, sql, args...)
-	assert.IsNil(err, "Failed to execute SQL query")
-	// if err != nil {
-	// 	return errors.Wrap(err, "Failed to execute SQL query")
-	// }
-
-	// Optionally check the number of rows affected
-	rowsAffected, err := result.RowsAffected()
+	var eventID int
+	err = rp.db.QueryRowContext(ctx, sql, args...).Scan(&eventID)
 	if err != nil {
-		return errors.Wrap(err, "Failed to get affected rows")
-	}
-	if rowsAffected == 0 {
-		return errors.New("No rows were inserted")
+		rp.lg.Warn(sql)
+		return 0, errors.Wrap(err, "Failed to execute SQL query")
 	}
 
-	return nil
+	return eventID, nil
 }
 
-func (rp *repository) GetEventById(ctx context.Context, eventId string) (*model.Event, error) {
-
+func (rp *repository) GetEventById(ctx context.Context, eventId int) (*model.Event, error) {
 	selectquery := `
-		select
-			id,
+		SELECT
+			event_id,
 			name,
 			description,
 			created_by,
-			ST_X(location_date) AS location_lat,
-			ST_Y(location_date) AS location_lon,
-			ST_M(location_date) AS time,
+			ST_X(location) AS location_lon, -- Ensure longitude is first (PostGIS standard)
+			ST_Y(location) AS location_lat, -- Latitude second
+			start_date,
 			organizer,
 			upvote,
 			downvote,
 			created_at
-		from event
-		where id = $1;
+		FROM event
+		WHERE event_id = $1;
 	`
+
 	// Execute the query
 	row := rp.db.QueryRowxContext(ctx, selectquery, eventId)
 	var eventModel model.Event
 	err := row.StructScan(&eventModel)
 	if err != nil {
-		rp.lg.Error(selectquery)
-		rp.lg.Error(eventId)
+		rp.lg.Error("SQL Query Failed:", zap.String("query", selectquery))
+		rp.lg.Error("Event ID:", zap.String("event_id", strconv.Itoa(eventId)))
 		return nil, errors.Wrap(err, "Failed to execute SQL query")
 	}
 	return &eventModel, nil
 }
 
 func (rp *repository) GetMapForQuadrant(ctx context.Context, mapQuery model.GetMapQueryParams) ([]model.Event, error) {
-	// SQL query with placeholders
-	selectquery := `
-	SELECT
-		id,
-		name,
-		description,
-		created_by,
-		ST_X(location_date) AS location_lat,
-		ST_Y(location_date) AS location_lon,
-		ST_M(location_date) AS time,
-		organizer,
-		upvote,
-		downvote,
-		created_at
-	FROM event
-	WHERE
-		ST_Within(
-			location_date,
-			ST_SetSRID(
-				ST_MakeEnvelope($1, $2, $3, $4, 4326), -- Dynamic spatial (lat/lon) bounds
-				4326
+	// ✅ Dynamically get partition table name
+	partitionTable := getPartition(mapQuery.Date) // Format: "event_YYYY_MM_DD"
+
+	selectquery := fmt.Sprintf(`
+		SELECT
+			event_id,
+			name,
+			description,
+			created_by,
+			ST_X(location) AS location_lon, -- Longitude
+			ST_Y(location) AS location_lat, -- Latitude
+			start_date,
+			organizer,
+			upvote,
+			downvote,
+			created_at
+		FROM %s
+		WHERE
+			ST_Within(
+				location,
+				ST_SetSRID(
+					ST_MakeEnvelope($1, $2, $3, $4, 4326), -- Bounding box for spatial query
+					4326
+				)
 			)
-		)
-		AND ST_M(location_date) BETWEEN $5 AND $6; -- Dynamic time filter
-	`
+	`, partitionTable) // ✅ Inject partition table name
 
 	args := []interface{}{
-		mapQuery.FirstQuadLon,         // $1
-		mapQuery.FirstQuadLat,         // $2
-		mapQuery.SecondQuadLon,        // $3
-		mapQuery.SecondQuadLat,        // $4
-		mapQuery.GetFromTime().Unix(), // $5
-		mapQuery.GetToTime().Unix(),   // $6
+		mapQuery.FirstQuadLon,  // $1 - Min Longitude
+		mapQuery.FirstQuadLat,  // $2 - Min Latitude
+		mapQuery.SecondQuadLon, // $3 - Max Longitude
+		mapQuery.SecondQuadLat, // $4 - Max Latitude
 	}
 
 	rows, err := rp.db.QueryxContext(ctx, selectquery, args...)

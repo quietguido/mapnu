@@ -2,9 +2,9 @@ package rest
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	eventModel "github.com/quietguido/mapnu/internal/repo/event/model"
 )
 
@@ -16,23 +16,31 @@ func (st *restH) CreateEventHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := st.services.Event.Create(r.Context(), createEvent)
+	eventId, err := st.services.Event.Create(r.Context(), createEvent)
 	if err != nil {
 		st.lg.Error(err.Error())
 		RespondWithError(w, http.StatusBadRequest, "bad request")
 		return
 	}
+
+	response := map[string]any{
+		"event_id": eventId,
+		"message":  "Event created successfully",
+	}
+
+	RespondWithJson(w, http.StatusOK, response)
 }
 
 func (st *restH) GetEventByIdHandler(w http.ResponseWriter, r *http.Request) {
-	eventId := r.PathValue("id")
-	if eventId == "" {
+	eventIdStr := r.PathValue("id")
+	if eventIdStr == "" {
 		RespondWithError(w, http.StatusBadRequest, "bad request")
 		return
 	}
-	err := uuid.Validate(eventId)
+
+	eventId, err := strconv.Atoi(eventIdStr)
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, "not valid UUID")
+		RespondWithError(w, http.StatusBadRequest, "bad request")
 		return
 	}
 
@@ -47,39 +55,50 @@ func (st *restH) GetEventByIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (st *restH) GetMapForQuadrantHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse query parameters into the mapQuery struct
-	var mapQuery eventModel.GetMapQueryParams
-	if err := DecodeQuery(r, &mapQuery); err != nil {
-		RespondWithError(w, http.StatusBadRequest, err.Error())
+	query := r.URL.Query()
+
+	firstLon, err := strconv.ParseFloat(query.Get("firstlon"), 64)
+	if err != nil {
+		http.Error(w, "Invalid firstlon parameter", http.StatusBadRequest)
+		return
+	}
+	firstLat, err := strconv.ParseFloat(query.Get("firstlat"), 64)
+	if err != nil {
+		http.Error(w, "Invalid firstlat parameter", http.StatusBadRequest)
+		return
+	}
+	secondLon, err := strconv.ParseFloat(query.Get("secondlon"), 64)
+	if err != nil {
+		http.Error(w, "Invalid secondlon parameter", http.StatusBadRequest)
+		return
+	}
+	secondLat, err := strconv.ParseFloat(query.Get("secondlat"), 64)
+	if err != nil {
+		http.Error(w, "Invalid secondlat parameter", http.StatusBadRequest)
 		return
 	}
 
-	if mapQuery.FirstQuadLon == 0 || mapQuery.FirstQuadLat == 0 || mapQuery.SecondQuadLon == 0 || mapQuery.SecondQuadLat == 0 {
+	dateStr := query.Get("date")
+	date, err := time.Parse(time.RFC3339, dateStr)
+	if err != nil {
+		http.Error(w, "Invalid date parameter (must be RFC3339 format)", http.StatusBadRequest)
+		return
+	}
+
+	queryParams := eventModel.GetMapQueryParams{
+		FirstQuadLon:  firstLon,
+		FirstQuadLat:  firstLat,
+		SecondQuadLon: secondLon,
+		SecondQuadLat: secondLat,
+		Date:          date,
+	}
+
+	if queryParams.FirstQuadLon == 0 || queryParams.FirstQuadLat == 0 || queryParams.SecondQuadLon == 0 || queryParams.SecondQuadLat == 0 {
 		RespondWithError(w, http.StatusBadRequest, "Missing or invalid quadrant parameters")
 		return
 	}
 
-	fromTime, err := time.Parse(time.RFC3339, mapQuery.FromTime)
-	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, "Invalid 'fromtime' format. Expected RFC3339 (e.g., 2024-11-17T14:17:01Z).")
-		return
-	}
-
-	toTime, err := time.Parse(time.RFC3339, mapQuery.ToTime)
-	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, "Invalid 'totime' format. Expected RFC3339 (e.g., 2024-11-17T14:17:01Z).")
-		return
-	}
-
-	if toTime.Before(fromTime) {
-		RespondWithError(w, http.StatusBadRequest, "'totime' must be after 'fromtime'.")
-		return
-	}
-
-	mapQuery.FromTime = fromTime.Format(time.RFC3339)
-	mapQuery.ToTime = toTime.Format(time.RFC3339)
-
-	events, err := st.services.Event.GetMapForQuadrant(r.Context(), mapQuery)
+	events, err := st.services.Event.GetMapForQuadrant(r.Context(), queryParams)
 	if err != nil {
 		st.lg.Error(err.Error())
 		RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve events")

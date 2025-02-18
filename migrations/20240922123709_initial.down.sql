@@ -1,22 +1,30 @@
--- Drop the index on the extracted event date
+-- ❌ Drop indexes
+DROP INDEX IF EXISTS bookings_event_id_idx;
+
 DROP INDEX IF EXISTS event_date_index;
 
--- Drop the function used to extract the date from POINTM
-DROP FUNCTION IF EXISTS get_event_date(geom GEOMETRY);
+DROP INDEX IF EXISTS event_location_index;
 
--- Drop indexes on the event table
-DROP INDEX IF EXISTS event_location_date_index;
 DROP INDEX IF EXISTS event_name_index;
 
--- Drop the event table
+-- ❌ Drop partitions
+DROP TABLE IF EXISTS event_2025_02_07;
+
+DROP TABLE IF EXISTS event_default;
+
+-- ❌ Drop partitioned table
 DROP TABLE IF EXISTS event;
 
--- Drop the index on client email
-DROP INDEX IF EXISTS client_email_index;
+-- ❌ Drop bookings table
+DROP TABLE IF EXISTS bookings;
 
--- Drop the client table (formerly "user")
-DROP TABLE IF EXISTS client;
+-- ❌ Drop friendships table
+DROP TABLE IF EXISTS friendships;
 
--- Disable extensions
+-- ❌ Drop users table
+DROP TABLE IF EXISTS users;
+
+-- ❌ Disable required extensions
 DROP EXTENSION IF EXISTS postgis;
+
 DROP EXTENSION IF EXISTS "uuid-ossp";

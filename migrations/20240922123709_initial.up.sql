@@ -24,9 +24,14 @@ CREATE TABLE IF NOT EXISTS friendships (
         PRIMARY KEY (user1_id, user2_id)
 );
 
--- ✅ Create partitioned event table (Fixing Primary Key issue)
+-- ✅ Create a global sequence for event_id
+CREATE SEQUENCE IF NOT EXISTS global_event_id_seq START
+WITH
+    1 INCREMENT BY 1;
+
+-- ✅ Create partitioned event table (Partitioning by start_date)
 CREATE TABLE IF NOT EXISTS event (
-    event_id BIGSERIAL NOT NULL,
+    event_id BIGINT NOT NULL DEFAULT nextval ('global_event_id_seq'), -- Using global sequence
     name VARCHAR(255) NOT NULL,
     description TEXT,
     created_by UUID REFERENCES users (id) ON DELETE SET NULL,
@@ -40,7 +45,7 @@ CREATE TABLE IF NOT EXISTS event (
         created_at TIMESTAMP
     WITH
         TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (event_id, start_date) -- ✅ Include `start_date` in PK
+        PRIMARY KEY (event_id, start_date) -- ✅ Required for partitioning, but does not enforce uniqueness on start_date
 )
 PARTITION BY
     RANGE (start_date);
@@ -66,8 +71,10 @@ CREATE TABLE IF NOT EXISTS bookings (
     booking_id SERIAL PRIMARY KEY,
     user_id UUID REFERENCES users (id) ON DELETE CASCADE,
     event_id BIGINT NOT NULL, -- Store event_id manually since we can't have FK to partitioned table
-    booking_status VARCHAR(20) CHECK (booking_status IN ('confirmed', 'cancelled')),
-    visibility VARCHAR(10) CHECK (visibility IN ('public', 'private')),
+    booking_status VARCHAR(20) DEFAULT 'pending' CHECK (
+        booking_status IN ('confirmed', 'pending', 'rejected')
+    ),
+    visibility VARCHAR(10) DEFAULT 'private' CHECK (visibility IN ('public', 'private')),
     booked_at TIMESTAMP
     WITH
         TIME ZONE DEFAULT CURRENT_TIMESTAMP

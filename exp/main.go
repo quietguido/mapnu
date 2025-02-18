@@ -34,36 +34,35 @@ func main() {
 	//create 1000 elements in the dp
 	rand.Seed(time.Now().UnixNano())
 
-	for i := 0; i < 1000000; i++ {
-		currentTime := time.Now()
-		rand_time := currentTime.Unix() - rand.Int63n(1000000) + 2000000
+	for i := 0; i < 1000; i++ {
+		// currentTime := time.Now()
+		// rand_time := currentTime.Unix() - rand.Int63n(1000000) + 2000000
 		rand_lon := astana_lon - rand.Float64() + 0.5
 		rand_lat := astana_lat - rand.Float64() + 0.5
 
 		query := `
 		INSERT INTO event (
-		    name,
-		    description,
-		    created_by,
-		    location_date,
-		    organizer,
-		    upvote,
-		    downvote
-		) VALUES (
-		    'My Event Name',
-		    'Event Description',
-		    '6dd4095d-e156-43eb-ab94-7651e68ca989',
-			ST_MakePointM($1, $2, $3), -- Example location (San Francisco)
-		    'Organizer Name',
-		    0,
-		    0
+	    name,
+	    description,
+	    created_by,
+	    location,
+	    start_date,
+	    organizer
+		)
+		VALUES (
+	    'Sample Event',
+	    'This is a sample event description.',
+	    '3c1c439c-d28f-41a1-abfa-8f06a52a74bb',
+	    ST_Point($1, $2), -- Example coordinates (Berlin)
+	    '2025-02-20 15:00:00+00',
+	    'John Doe'
 		)
 		`
 
 		_, err := dbcon.Exec(query, []interface{}{
 			rand_lon,
 			rand_lat,
-			rand_time,
+			// rand_time,
 		}...)
 
 		assert.ErrorNil(err, "failed db connection")

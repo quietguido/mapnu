@@ -31,9 +31,21 @@ func GetHandler(
 	lgMiddleware := middleware.NewLogging(lg)
 	middlewareStack := middleware.CreateStack(lgMiddleware.Logging)
 
+	//user
+	router.HandleFunc("POST /user", restH.CreateUserHandler)
+	router.HandleFunc("GET /user/{id}", restH.GetUserByIdHandler)
+
+	//event
 	router.HandleFunc("POST /event", restH.CreateEventHandler)
 	router.HandleFunc("GET /event/{id}", restH.GetEventByIdHandler)
 	router.HandleFunc("GET /map", restH.GetMapForQuadrantHandler)
+
+	//booking
+	router.HandleFunc("POST /booking", restH.CreateBookingHandler)
+	router.HandleFunc("GET /booking/{id}", restH.GetBookingByIdHandler)
+	router.HandleFunc("GET /booking", restH.GetBookingsForUserHandler)
+	router.HandleFunc("POST /booking/status", restH.ChangeBookingStatusHandler)
+	router.HandleFunc("GET /booking/organizer", restH.GetBookingApplicationsForOrganizer)
 
 	return middlewareStack(router)
 }
