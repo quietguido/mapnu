@@ -10,12 +10,12 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/quietguido/mapnu/internal/database/psql"
-	"github.com/quietguido/mapnu/internal/repo"
-	"github.com/quietguido/mapnu/internal/services"
-	"github.com/quietguido/mapnu/internal/transport/rest"
-	"github.com/quietguido/mapnu/pkg/assert"
-	"github.com/quietguido/mapnu/pkg/httpserver"
+	"github.com/quietguido/mapnu/mainservice/internal/database/psql"
+	"github.com/quietguido/mapnu/mainservice/internal/repo"
+	"github.com/quietguido/mapnu/mainservice/internal/services"
+	"github.com/quietguido/mapnu/mainservice/internal/transport/rest"
+	"github.com/quietguido/mapnu/mainservice/pkg/assert"
+	"github.com/quietguido/mapnu/mainservice/pkg/httpserver"
 )
 
 func Execute() {

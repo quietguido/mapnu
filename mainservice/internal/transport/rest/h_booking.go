@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
-	bookingModel "github.com/quietguido/mapnu/internal/repo/booking/model"
+	bookingModel "github.com/quietguido/mapnu/mainservice/internal/repo/booking/model"
 )
 
 func (st *restH) CreateBookingHandler(w http.ResponseWriter, r *http.Request) {

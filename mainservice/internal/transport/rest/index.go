@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/quietguido/mapnu/internal/services"
-	"github.com/quietguido/mapnu/pkg/middleware"
+	"github.com/quietguido/mapnu/mainservice/internal/services"
+	"github.com/quietguido/mapnu/mainservice/pkg/middleware"
 )
 
 type restH struct {

@@ -5,12 +5,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/quietguido/mapnu/internal/repo/booking"
-	bookingModel "github.com/quietguido/mapnu/internal/repo/booking/model"
-	"github.com/quietguido/mapnu/internal/repo/event"
-	eventModel "github.com/quietguido/mapnu/internal/repo/event/model"
-	"github.com/quietguido/mapnu/internal/repo/user"
-	userModel "github.com/quietguido/mapnu/internal/repo/user/model"
+	"github.com/quietguido/mapnu/mainservice/internal/repo/booking"
+	bookingModel "github.com/quietguido/mapnu/mainservice/internal/repo/booking/model"
+	"github.com/quietguido/mapnu/mainservice/internal/repo/event"
+	eventModel "github.com/quietguido/mapnu/mainservice/internal/repo/event/model"
+	"github.com/quietguido/mapnu/mainservice/internal/repo/user"
+	userModel "github.com/quietguido/mapnu/mainservice/internal/repo/user/model"
 
 	"go.uber.org/zap"
 )

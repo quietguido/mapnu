@@ -5,10 +5,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/quietguido/mapnu/internal/repo"
+	"github.com/quietguido/mapnu/mainservice/internal/repo"
 	"go.uber.org/zap"
 
-	userModel "github.com/quietguido/mapnu/internal/repo/user/model"
+	userModel "github.com/quietguido/mapnu/mainservice/internal/repo/user/model"
 )
 
 type service struct {

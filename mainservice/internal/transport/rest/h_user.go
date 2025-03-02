@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	userModel "github.com/quietguido/mapnu/internal/repo/user/model"
+	userModel "github.com/quietguido/mapnu/mainservice/internal/repo/user/model"
 )
 
 func (st *restH) CreateUserHandler(w http.ResponseWriter, r *http.Request) {

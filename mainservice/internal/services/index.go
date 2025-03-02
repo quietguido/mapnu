@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/quietguido/mapnu/internal/repo"
-	bookingModel "github.com/quietguido/mapnu/internal/repo/booking/model"
-	eventModel "github.com/quietguido/mapnu/internal/repo/event/model"
-	userModel "github.com/quietguido/mapnu/internal/repo/user/model"
-	"github.com/quietguido/mapnu/internal/services/booking"
-	"github.com/quietguido/mapnu/internal/services/event"
-	"github.com/quietguido/mapnu/internal/services/user"
+	"github.com/quietguido/mapnu/mainservice/internal/repo"
+	bookingModel "github.com/quietguido/mapnu/mainservice/internal/repo/booking/model"
+	eventModel "github.com/quietguido/mapnu/mainservice/internal/repo/event/model"
+	userModel "github.com/quietguido/mapnu/mainservice/internal/repo/user/model"
+	"github.com/quietguido/mapnu/mainservice/internal/services/booking"
+	"github.com/quietguido/mapnu/mainservice/internal/services/event"
+	"github.com/quietguido/mapnu/mainservice/internal/services/user"
 	"go.uber.org/zap"
 )
 

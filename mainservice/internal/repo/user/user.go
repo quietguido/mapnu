@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/quietguido/mapnu/internal/repo/user/model"
-	"github.com/quietguido/mapnu/pkg/assert"
+	"github.com/quietguido/mapnu/mainservice/internal/repo/user/model"
+	"github.com/quietguido/mapnu/mainservice/pkg/assert"
 )
 
 const (

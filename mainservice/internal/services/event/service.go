@@ -3,10 +3,10 @@ package event
 import (
 	"context"
 
-	"github.com/quietguido/mapnu/internal/repo"
+	"github.com/quietguido/mapnu/mainservice/internal/repo"
 	"go.uber.org/zap"
 
-	eventModel "github.com/quietguido/mapnu/internal/repo/event/model"
+	eventModel "github.com/quietguido/mapnu/mainservice/internal/repo/event/model"
 )
 
 type service struct {

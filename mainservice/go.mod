@@ -1,4 +1,4 @@
-module github.com/quietguido/mapnu
+module github.com/quietguido/mapnu/mainservice
 
 go 1.22.4
 

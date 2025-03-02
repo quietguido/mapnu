@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/quietguido/mapnu/internal/database/psql"
-	"github.com/quietguido/mapnu/pkg/assert"
+	"github.com/quietguido/mapnu/mainservice/internal/database/psql"
+	"github.com/quietguido/mapnu/mainservice/pkg/assert"
 )
 
 const (

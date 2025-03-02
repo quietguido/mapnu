@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	eventModel "github.com/quietguido/mapnu/internal/repo/event/model"
+	eventModel "github.com/quietguido/mapnu/mainservice/internal/repo/event/model"
 )
 
 func (st *restH) CreateEventHandler(w http.ResponseWriter, r *http.Request) {

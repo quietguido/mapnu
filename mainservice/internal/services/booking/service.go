@@ -5,10 +5,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/quietguido/mapnu/internal/repo"
+	"github.com/quietguido/mapnu/mainservice/internal/repo"
 	"go.uber.org/zap"
 
-	bookingModel "github.com/quietguido/mapnu/internal/repo/booking/model"
+	bookingModel "github.com/quietguido/mapnu/mainservice/internal/repo/booking/model"
 )
 
 const (
