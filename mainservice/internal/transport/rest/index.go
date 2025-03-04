@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"github.com/quietguido/mapnu/mainservice/internal/services/oauth"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -12,12 +13,17 @@ import (
 type restH struct {
 	lg       *zap.Logger
 	services *services.Service
+	oauthH   *OAuthHandler
 }
 
 func initRest(lg *zap.Logger, services *services.Service) *restH {
+	oauthService := oauth.NewOAuthService(lg)
+	oauthHandler := NewOAuthHandler(oauthService)
+
 	return &restH{
 		lg:       lg,
 		services: services,
+		oauthH:   oauthHandler,
 	}
 }
 
@@ -46,6 +52,10 @@ func GetHandler(
 	router.HandleFunc("GET /booking", restH.GetBookingsForUserHandler)
 	router.HandleFunc("POST /booking/status", restH.ChangeBookingStatusHandler)
 	router.HandleFunc("GET /booking/organizer", restH.GetBookingApplicationsForOrganizer)
+
+	//oauth
+	router.HandleFunc("/api/user/profile", restH.oauthH.GetUserProfile)
+	router.HandleFunc("POST /auth/token/exchange", restH.oauthH.HandleTokenExchange)
 
 	return middlewareStack(router)
 }

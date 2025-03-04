@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"github.com/quietguido/mapnu/mainservice/internal/services/oauth"
 
 	"github.com/google/uuid"
 	"github.com/quietguido/mapnu/mainservice/internal/repo"
@@ -33,10 +34,17 @@ type BookingService interface {
 	GetBookingApplicationsForOrganizer(ctx context.Context, userId uuid.UUID) ([]bookingModel.Booking, error)
 }
 
+type OAuthService interface {
+	VerifyIDToken(ctx context.Context, idToken string) (*oauth.Claims, error)
+	GenerateJWT(email, givenName, familyName string) (string, error)
+	VerifyJWT(ctx context.Context, tokenString string) (*oauth.Claims, error)
+}
+
 type Service struct {
 	Event   EventService
 	User    UserService
 	Booking BookingService
+	OAuth   OAuthService
 }
 
 func InitServices(lg *zap.Logger, repos *repo.Repositories) *Service {
@@ -48,5 +56,6 @@ func InitServices(lg *zap.Logger, repos *repo.Repositories) *Service {
 			repos.Booking,
 			repos.Event,
 		),
+		OAuth: oauth.NewOAuthService(lg),
 	}
 }
